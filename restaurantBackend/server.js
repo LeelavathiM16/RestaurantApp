@@ -7,9 +7,12 @@ const connectionDb= require('./middleware/connectionDb');
 const app = express();
 
 app.use(bodyParser);
-app.use(cookieParser())
+app.use(cookieParser());
+app.use(express.json());
+
+connectionDb();
 app.use(cors({
-    origin:"",
+    origin:"http://localhost:5173/",
     credentials:true,
     methods:["GET", "POST", "DELETE", "PATCH"],
     allowedHeaders:[
@@ -20,6 +23,3 @@ app.use(cors({
         "Pragma"
     ]
 }))
-
-
-connectionDb();
