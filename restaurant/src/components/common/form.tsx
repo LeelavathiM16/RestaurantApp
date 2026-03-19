@@ -130,7 +130,7 @@ function FormComponent({ formControl, buttonText }: formComponentTypes) {
           </FieldGroup>
         ))}
       </div>
-      <Button type="submit" className="mt-2 w-full">
+      <Button type="submit" className="mt-3 w-full">
         {buttonText || "Submit"}
       </Button>
     </form>
