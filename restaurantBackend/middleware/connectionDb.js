@@ -1,18 +1,15 @@
-const express = require("express");
-const moongoose = require("moongoose");
+const mongoose = require("mongoose");
 
-const app = express();
-const port = process.env.port || 3000;
-
-const connectionDb = () => {
-  moongoose
-    .connect(
+const connectionDb = async () => {
+  try {
+    await mongoose.connect(
       "mongodb+srv://iamleelamadhesh_db_user:qeTO08Zz3i4rTaqC@cluster1.srw1nzw.mongodb.net/",
-    )
-    .then(() => console.log("MongoGB connected"))
-    .catch((err) => console.log(err));
-
-  app.listen(port, () => console.log("DB connected successfully"));
+    );
+    console.log("mongo DB Connected");
+  } catch (error) {
+    console.log("DB connection failed");
+    process.exit(1);
+  }
 };
 
-module.exports= connectionDb;
+module.exports = connectionDb;

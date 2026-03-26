@@ -1,11 +1,6 @@
 import { useForm, Controller } from "react-hook-form";
 import type { ControllerRenderProps } from "react-hook-form";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -14,48 +9,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import type { ControllerType, formComponentTypes, optionsType } from "@/type";
-import { string, z } from "zod";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { schemaMap, defaultValuesMap } from "./schema";
+import type {
+  ControllerType,
+  FormValues,
+  formComponentTypes,
+  optionsType,
+} from "../../../type";
 
 const inputTypes = {
   INPUT: "input",
   SELECT: "select",
   TEXTAREA: "textArea",
-};
+} as const;
 
-const schema = z.object({
-  username: string().max(5, "maximum 5 letters").nonempty(),
-  email: string().refine(
-    (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
-    "invalid email",
-  ),
-  password: string()
-    .min(8, "minimum 8 characters")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/),
-});
+function FormComponent({
+  formControl,
+  buttonText,
+  OnSubmit,
+  mode,
+}: formComponentTypes) {
+  const schema = schemaMap[mode];
 
-type FormValues = z.infer<typeof schema>;
-
-function FormComponent({ formControl, buttonText }: formComponentTypes) {
-  //useform
   const { handleSubmit, control } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-    },
+    defaultValues: defaultValuesMap[mode],
   });
-  const OnSubmit = async (data: FormValues) => {
-    console.log(data);
-  };
 
   const fieldInputSelection = (
     fieldConfig: ControllerType,
-    field: ControllerRenderProps<FormValues, keyof FormValues>,
+    field: ControllerRenderProps<FormValues, keyof FormValues>
   ): React.ReactElement => {
     switch (fieldConfig.elementType) {
       case inputTypes.INPUT:
@@ -65,8 +51,9 @@ function FormComponent({ formControl, buttonText }: formComponentTypes) {
             placeholder={fieldConfig.placeholder}
             type={fieldConfig.type}
             {...field}
-          ></Input>
+          />
         );
+
       case inputTypes.SELECT:
         return (
           <Select value={field.value ?? ""} onValueChange={field.onChange}>
@@ -74,20 +61,15 @@ function FormComponent({ formControl, buttonText }: formComponentTypes) {
               <SelectValue placeholder={fieldConfig.placeholder} />
             </SelectTrigger>
             <SelectContent>
-              {fieldConfig.options
-                ? fieldConfig.options.map((optionItem: optionsType) => (
-                    <SelectItem
-                      key={optionItem.id}
-                      id={optionItem.id}
-                      value={optionItem.id}
-                    >
-                      {optionItem.id}
-                    </SelectItem>
-                  ))
-                : null}
+              {fieldConfig.options?.map((optionItem: optionsType) => (
+                <SelectItem key={optionItem.id} value={optionItem.id}>
+                  {optionItem.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         );
+
       case inputTypes.TEXTAREA:
         return (
           <Textarea
@@ -96,6 +78,7 @@ function FormComponent({ formControl, buttonText }: formComponentTypes) {
             {...field}
           />
         );
+
       default:
         return (
           <Input
@@ -103,7 +86,7 @@ function FormComponent({ formControl, buttonText }: formComponentTypes) {
             placeholder={fieldConfig.placeholder}
             type={fieldConfig.type}
             {...field}
-          ></Input>
+          />
         );
     }
   };
@@ -114,7 +97,6 @@ function FormComponent({ formControl, buttonText }: formComponentTypes) {
         {formControl?.map((fieldConfig: ControllerType) => (
           <FieldGroup key={fieldConfig.name}>
             <Controller
-              key={fieldConfig.name}
               control={control}
               name={fieldConfig.name as keyof FormValues}
               render={({ field, fieldState }) => (

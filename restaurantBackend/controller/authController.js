@@ -5,7 +5,6 @@ const jwt = require("jsonwebtoken");
 
 const registerController = async (req, res, next) => {
   const { username, email, password } = req.body;
-
   try {
     const checkRegisterEmail = await User.findOne({ email });
 
@@ -19,17 +18,17 @@ const registerController = async (req, res, next) => {
       username,
       password: hashPassword,
       email,
-      role,
     });
 
-    try {
-      await newUser.save();
-    } catch (err) {
-      return next(new ErrorHandle("signup failed", 500));
-    }
-    res.status(201).json({ success: true, message: "Signup successfully" });
+    await newUser.save();
+    return res
+      .status(201)
+      .json({ success: true, message: "Signup successfully", data: newUser });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Registration failed" });
+    console.log(err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Registration failed" });
   }
 };
 
@@ -39,30 +38,42 @@ const loginController = async (req, res, next) => {
     const checkLoginUser = await User.findOne({ email });
 
     if (!checkLoginUser) {
-      return next(new ErrorHandle("login failed", 422));
+      return next(new ErrorHandle("Invalid credentials", 401));
     }
 
     let userPassword = await bcrypt.compare(password, checkLoginUser.password);
-
+    if (!userPassword) {
+      return next(new ErrorHandle("Invalid credentials", 401));
+    }
     let token;
     if (checkLoginUser && userPassword) {
       token = jwt.sign(
-        { userId: username, userEmail: email, userRole: role },
+        {
+          id: checkLoginUser._id,
+          email: checkLoginUser.email,
+          role: checkLoginUser.role,
+        },
         "SECRETKEY",
         { expiresIn: "60m" },
       );
     }
-    res.cookie("accessToken", token, {
-      httpOnly: true,
-      secure: false,
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "logged in successfully",
-    });
+    return res
+      .cookie("accessToken", token, {
+        httpOnly: true,
+        secure: false,
+      })
+      .status(200)
+      .json({
+        success: true,
+        message: "logged in successfully",
+        user: {
+          id: checkLoginUser._id,
+          email: checkLoginUser.email,
+          role: checkLoginUser.role,
+        },
+      });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Login failed" });
+    return res.status(500).json({ success: false, message: "Login failed" });
   }
 };
 
